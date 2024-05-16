@@ -84,7 +84,7 @@ mod simple_component_test {
     use wasmtime_wasi::async_trait;
 
     wasmtime::component::bindgen!({
-        path: "./wasm_test_components/simple_component/wit/world.wit",
+        path: "./tests/simple_component/wit/world.wit",
         world: "example",
         async: true,
     });
@@ -117,7 +117,7 @@ mod simple_component_test {
 
         let mut runtime = runtime(true, nested_view).expect("Failed to build runtime");
 
-        let component = Component::from_file(&runtime.engine, "./wasm_test_components/simple_component/target/wasm32-wasi/debug/simple_component.wasm")
+        let component = Component::from_file(&runtime.engine, "./tests/simple_component/target/wasm32-wasi/debug/simple_component.wasm")
         .expect("Failed to load component from disk. Did you compile it using `cargo component build`?");
 
         let (instance, _) =
