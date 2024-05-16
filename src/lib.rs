@@ -149,3 +149,99 @@ mod simple_component_test {
         assert_eq!(result, "Hello, World! 1");
     }
 }
+
+#[cfg(test)]
+mod simple_resource_test {
+    use self::component::simple_resource;
+
+    use super::*;
+    use anyhow::Ok;
+    use wasmtime::component::Component;
+    use wasmtime_wasi::async_trait;
+
+    wasmtime::component::bindgen!({
+        path: "./tests/simple_resource/wit/world.wit",
+        world: "example",
+        async: true,
+        with: {
+            "component:simple-resource/some-resource/foo-resource": SomeResource,
+          },
+    });
+
+    pub struct SomeResource {
+        message: String,
+    }
+
+    pub struct ResourceView {
+        table: ResourceTable,
+    }
+
+    impl NestedView for ResourceView {
+        fn add_all_to_linker(
+            &mut self,
+            linker: &mut Linker<RuntimeView<Self>>,
+        ) -> anyhow::Result<()> {
+            simple_resource::some_resource::add_to_linker(linker, |v| &mut v.nested_view)
+        }
+    }
+
+    impl simple_resource::some_resource::Host for ResourceView {}
+
+    #[async_trait]
+    impl simple_resource::some_resource::HostFooResource for ResourceView {
+        async fn foo(
+            &mut self,
+            this: wasmtime::component::Resource<simple_resource::some_resource::FooResource>,
+        ) -> wasmtime::Result<String> {
+            let value = self.table.get(&this);
+
+            Ok(value.map(|v| v.message.clone())?)
+        }
+
+        async fn new(
+            &mut self,
+        ) -> wasmtime::Result<
+            wasmtime::component::Resource<simple_resource::some_resource::FooResource>,
+        > {
+            Ok(self.table.push(SomeResource {
+                message: "noodles".into(),
+            })?)
+        }
+
+        fn drop(
+            &mut self,
+            rep: wasmtime::component::Resource<simple_resource::some_resource::FooResource>,
+        ) -> wasmtime::Result<()> {
+            let _ = self.table.delete(rep)?;
+            Ok(())
+        }
+    }
+
+    #[tokio::test]
+    async fn test() {
+        let nested_view = ResourceView {
+            table: ResourceTable::new(),
+        };
+
+        let mut runtime = runtime(true, nested_view).expect("Failed to build runtime");
+
+        let component = Component::from_file(
+            &runtime.engine,
+            "./tests/simple_resource/target/wasm32-wasi/debug/simple_resource.wasm",
+        )
+        .expect(
+            "Failed to load component from disk. Did you compile it using `cargo component build`?",
+        );
+
+        let (instance, _) =
+            Example::instantiate_async(&mut runtime.store, &component, &runtime.linker)
+                .await
+                .expect("failed to instantiate component");
+
+        let result = instance
+            .call_test(runtime.store)
+            .await
+            .expect("failed to invoke");
+        assert_eq!(result, "Hello, World! noodles")
+    }
+}
