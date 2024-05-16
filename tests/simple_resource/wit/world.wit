@@ -1,0 +1,14 @@
+package component:simple-resource;
+
+interface some-resource {
+  resource foo-resource {
+    foo: func() -> string;
+    new: static func() -> foo-resource;
+  }
+}
+
+/// An example world for the component to target.
+world example {
+    import some-resource;
+    export test: func() -> string;
+}
