@@ -1,0 +1,10 @@
+package component:simple-component;
+
+/// An example world for the component to target.
+world example {
+    import host: interface {
+        get-data: func() -> string;
+    }
+
+    export hello-world: func() -> string;
+}

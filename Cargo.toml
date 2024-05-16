@@ -1,0 +1,10 @@
+[package]
+name = "its-wasmtime"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+wasmtime = { version = "20.0.2", features = ["runtime", "component-model"]}
+wasmtime-wasi = {version = "20.0.2", features = []}
+anyhow = "1.0.83"
+tokio = { version = "1.37.0", features = ["full"] }
