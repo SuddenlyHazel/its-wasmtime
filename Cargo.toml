@@ -2,6 +2,11 @@
 name = "its-wasmtime"
 version = "0.1.0"
 edition = "2021"
+license = "MIT OR Apache-2.0"
+keywords = ["wasm", "wasmtime", "plugin"]
+description = "A simple Wasmtime component model runtime"
+readme = "README.md"
+repository = "https://github.com/SuddenlyHazel/its-wasmtime"
 
 [dependencies]
 wasmtime = { version = "20.0.2", features = ["runtime", "component-model"]}
